@@ -16,6 +16,34 @@ function hasMixedScript(text: string): boolean {
   );
 }
 
+// ⬇️ NOVA FUNKCIJA IDE OVDE
+
+function analyzeScripts(text: string) {
+  const latin: string[] = [];
+  const cyrillic: string[] = [];
+
+  for (const char of text) {
+    const code = `U+${char
+      .codePointAt(0)!
+      .toString(16)
+      .toUpperCase()
+      .padStart(4, "0")}`;
+
+    if (LATIN_RE.test(char)) {
+      latin.push(`${char} [${code}]`);
+    }
+
+    if (CYRILLIC_RE.test(char)) {
+      cyrillic.push(`${char} [${code}]`);
+    }
+  }
+
+  return {
+    latin: latin.join(", "),
+    cyrillic: cyrillic.join(", "),
+  };
+}
+
 export default function Home() {
   const [fileName, setFileName] = useState("");
   const [rowCount, setRowCount] = useState(0);
@@ -26,6 +54,8 @@ export default function Home() {
       excelRow: number;
       column: string;
       value: string;
+      latin: string;
+      cyrillic: string;
     }[]
   >([]);
 
@@ -58,6 +88,8 @@ export default function Home() {
         excelRow: number;
         column: string;
         value: string;
+        latin: string;
+        cyrillic: string;
       }[] = [];
 
       for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
@@ -71,10 +103,14 @@ export default function Home() {
           if (hasMixedScript(value)) {
             rowHasProblem = true;
 
+            const scripts = analyzeScripts(value);
+
             problems.push({
               excelRow: rowIndex + 2,
               column,
               value,
+              latin: scripts.latin,
+              cyrillic: scripts.cyrillic,
             });
 
             break;
@@ -186,6 +222,12 @@ export default function Home() {
                   <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">
                     Vrednost
                   </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">
+                    Latinični karakteri
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">
+                    Ćirilični karakteri
+                  </th>
                 </tr>
               </thead>
 
@@ -201,6 +243,12 @@ export default function Home() {
 
                     <td className="px-4 py-3 border-t border-slate-100">
                       {row.value}
+                    </td>
+                    <td className="px-4 py-3 border-t border-slate-100">
+                      {row.latin}
+                    </td>
+                    <td className="px-4 py-3 border-t border-slate-100">
+                      {row.cyrillic}
                     </td>
                   </tr>
                 ))}
